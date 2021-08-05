@@ -2,6 +2,8 @@ import numpy as np
 import torch
 import pandas as pd
 import utils
+import classifiers
+from classifiers import inception
 from utils import metrics
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -11,7 +13,7 @@ def read_data(input_csv):
   s1 = pd.read_csv(input_csv)
   s1 = s1.to_numpy(s1)
   # assign X and y
-  X = s1[:, 1:20] 
+  X = s1[:, 1:21] 
   y = s1[:, -2]
   
 
@@ -72,6 +74,17 @@ def test_epoch(model,criterion, dataloader,device):
         y_true_list.append(y_true)
         y_pred_list.append(y_pred.argmax(-1))
   return torch.stack(losses), torch.cat(y_true_list), torch.cat(y_pred_list)
+
+def get_model(modelname, num_classes, input_dim, num_layers, hidden_dims, device):
+    #modelname = modelname.lower() #make case invariant
+    if modelname == "inception":
+        model = inception.InceptionTime(num_classes=num_classes,input_dim=20, num_layers=6, hidden_dims=128, device=device).to(device)
+    #elif modelname == "nne":        
+        #model = inception.InceptionTime(num_classes=num_classes,input_dim=1, num_layers=6, hidden_dims=128, device=device).to(device)
+    else:
+        raise ValueError("invalid model argument. choose from 'InceptionTime', or 'NNE'")
+
+    return model
 
 def training(input_dir, output_dir, model, epochs, trainloader, testloaderm use_gpu = False):
 
