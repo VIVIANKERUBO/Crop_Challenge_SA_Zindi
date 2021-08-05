@@ -73,7 +73,15 @@ def test_epoch(model,criterion, dataloader,device):
         y_pred_list.append(y_pred.argmax(-1))
   return torch.stack(losses), torch.cat(y_true_list), torch.cat(y_pred_list)
 
-def training(model, epochs, trainloader, testloader):
+def training(input_dir, output_dir, model, epochs, trainloader, testloaderm use_gpu = False):
+
+  # choice of the device
+  if torch.cuda.is_available() and use_gpu:
+    device = "cuda"
+  else:
+    device = "cpu"
+  device = torch.device(device)
+
 
   criterion = torch.nn.CrossEntropyLoss(reduction="mean")
   optimizer = Adam(model.parameters(), lr=0.001)
@@ -98,7 +106,30 @@ def training(model, epochs, trainloader, testloader):
     log_df = pd.DataFrame(log).set_index("epoch")
     log_df.to_csv(os.path.join(logdir, "trainlog.csv"))
     
+
+def parse_args():
     
+    parser = argparse.ArgumentParser(description='Train and evaluate sentinel 1 and sentine2 satellite time series data
+                                                 'with Inception time models'
+                                                 'This script trains a model on training dataset'
+                                                 'evaluates performance on a validation data'
+                                                 'and stores progress and model paths in --logdir.')
+    parser.add_argument('-i','--input_dir', action="store", help='input directory', type=str)  
+    parser.add_argument('-d','--output_dir', action="store", help='output directory', type=str)
+    parser.add_argument(
+        '-b','--batchsize', default=64, action="store", help='batch size', type=int)
+
+    parser.add_argument('-e','--epochs', default=10, action="store", help='partition id for grouped datasets', type=int)   
+    parser.add_argument(
+        '-g','--use_gpu', default="False", action="store", type=lambda x: (str(x).lower() == 'true'), help='select whether to use GPU or not.')
+    args = parser.parse_args() 
+
+    return args
+
+if __name__ == "__main__":    
+    args = parse_args()
+    
+    training(args.input_dir, args.output_dir, args.batchsize,args.epochs, args.use_gpu)
   
 
   
